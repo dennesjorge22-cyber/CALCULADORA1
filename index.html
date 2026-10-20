@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2b2d30">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Calculadora Retrô Expansível</title>
+  
+  <!-- Fonte Display Digital LCD -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --case-bg: #353839;
+      --case-bevel-top: #525659;
+      --case-bevel-bottom: #1f2022;
+      --lcd-green-bg: #8ba888;
+      --lcd-green-dim: #7a9577;
+      --lcd-green-text: #1a2718;
+      --lcd-amber-bg: #c9933b;
+      --lcd-amber-dim: #b07e2c;
+      --lcd-amber-text: #2b1704;
+      --btn-cream: #e6dfcc;
+      --btn-cream-shadow: #9e9785;
+      --btn-dark: #222326;
+      --btn-dark-shadow: #111213;
+      --btn-orange: #d35400;
+      --btn-orange-shadow: #8e3800;
+      --btn-blue: #2980b9;
+      --btn-blue-shadow: #1a4f73;
+      --paper-bg: #f7f3e8;
+      --paper-text: #2c251f;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: #1a1c1e;
+      background-image: radial-gradient(#2c3036 1px, transparent 1px);
+      background-size: 16px 16px;
+      font-family: 'Share Tech Mono', monospace, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+      color: #fff;
+    }
+
+    /* Chassi da Calculadora */
+    .retro-calc-wrapper {
+      width: 100%;
+      max-width: 410px;
+      background: linear-gradient(145deg, #3f4347, #26282a);
+      border-radius: 28px;
+      padding: 18px 16px;
+      box-shadow: 
+        0 20px 45px rgba(0, 0, 0, 0.75),
+        inset 0 2px 2px var(--case-bevel-top),
+        inset 0 -3px 4px var(--case-bevel-bottom);
+      border: 3px solid #232527;
+      position: relative;
+    }
+
+    /* Placa Superior com Logo e Painel Solar */
+    .top-badge-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .brand-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #9aa2aa;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-led {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00ff66;
+      box-shadow: 0 0 6px #00ff66;
+    }
+
+    /* Painel Solar Fictício Retrô */
+    .solar-cell {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: #151111;
+      padding: 3px 5px;
+      border-radius: 4px;
+      border: 1px solid #4a4545;
+      width: 85px;
+      height: 20px;
+    }
+
+    .solar-grid-pane {
+      background: linear-gradient(180deg, #302436 0%, #150f1a 100%);
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Visor LCD Retrô */
+    .lcd-screen-bezel {
+      background: #1e2022;
+      padding: 10px;
+      border-radius: 14px;
+      border: 3px solid #141517;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.85);
+      margin-bottom: 14px;
+    }
+
+    .lcd-screen {
+      background-color: var(--lcd-green-bg);
+      color: var(--lcd-green-text);
+      border-radius: 6px;
+      padding: 10px 12px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.35);
+      position: relative;
+      transition: background-color 0.3s, color 0.3s;
+      overflow: hidden;
+    }
+
+    .lcd-screen.amber-mode {
+      background-color: var(--lcd-amber-bg);
+      color: var(--lcd-amber-text);
+    }
+
+    /* Linhas de Varredura da Tela */
+    .lcd-screen::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.04) 0px,
+        rgba(0, 0, 0, 0.04) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+    }
+
+    .lcd-indicators {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+
+    .lcd-history {
+      font-size: 13px;
+      min-height: 16px;
+      text-align: right;
+      opacity: 0.65;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lcd-main-digits {
+      font-family: 'VT323', monospace;
+      font-size: 44px;
+      line-height: 1;
+      text-align: right;
+      letter-spacing: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    /* Barra de Controle de Expansão e Mídia */
+    .control-strip {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tool-btn {
+      flex: 1;
+      background: #2b2e31;
+      color: #b2b9c0;
+      border: 1px solid #44484d;
+      border-radius: 8px;
+      padding: 7px 4px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      box-shadow: 0 2px 0 #1b1c1d;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.1s;
+    }
+
+    .tool-btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
+    .tool-btn.active {
+      background: #d35400;
+      color: #fff;
+      border-color: #f39c12;
+    }
+
+    /* Painel Expansível de Funções Científicas */
+    .expandable-scientific-panel {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 0;
+      border-bottom: 0px solid transparent;
+    }
+
+    .expandable-scientific-panel.expanded {
+      max-height: 200px;
+      opacity: 1;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+
+    /* Fita de Papel de Auditoria Retrô (Paper Tape) */
+    .paper-tape-container {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      margin-bottom: 0;
+    }
+
+    .paper-tape-container.open {
+      max-height: 140px;
+      opacity: 1;
+      margin-bottom: 12px;
+    }
+
+    .paper-tape {
+      background: var(--paper-bg);
+      color: var(--paper-text);
+      font-size: 11px;
+      border-radius: 4px 4px 0 0;
+      padding: 8px 12px;
+      max-height: 125px;
+      overflow-y: auto;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0,0,0,0.4);
+      border-bottom: 4px dashed #cfc7b4;
+    }
+
+    .paper-tape-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 0.5px dotted rgba(0,0,0,0.15);
+      padding: 2px 0;
+    }
+
+    /* Teclado Principal */
+    .calc-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    /* Botões Vintage 3D */
+    .btn {
+      font-family: 'Share Tech Mono', monospace;
+      height: 52px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.08s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:active {
+      transform: translateY(3px);
+    }
+
+    .btn .sublabel {
+      font-size: 8px;
+      opacity: 0.7;
+      margin-top: -2px;
+    }
+
+    /* Botão Numérico Estilo Creme Vintage */
+    .btn-num {
+      background: var(--btn-cream);
+      color: #2b2b28;
+      box-shadow: 0 4px 0 var(--btn-cream-shadow), 0 6px 6px rgba(0,0,0,0.4);
+    }
+    .btn-num:active {
+      box-shadow: 0 1px 0 var(--btn-cream-shadow);
+    }
+
+    /* Botão Escuro */
+    .btn-dark {
+      background: var(--btn-dark);
+      color: #cfd8dc;
+      box-shadow: 0 4px 0 var(--btn-dark-shadow), 0 6px 6px rgba(0,0,0,0.4);
+    }
+    .btn-dark:active {
+      box-shadow: 0 1px 0 var(--btn-dark-shadow);
+    }
+
+    /* Botão Laranja (Ações Primárias / Limpar) */
+    .btn-orange {
+      background: var(--btn-orange);
+      color: #fff;
+      box-shadow: 0 4px 0 var(--btn-orange-shadow), 0 6px 6px rgba(0,0,0,0.4);
+    }
+    .btn-orange:active {
+      box-shadow: 0 1px 0 var(--btn-orange-shadow);
+    }
+
+    /* Botão Azul */
+    .btn-blue {
+      background: var(--btn-blue);
+      color: #fff;
+      box-shadow: 0 4px 0 var(--btn-blue-shadow), 0 6px 6px rgba(0,0,0,0.4);
+    }
+    .btn-blue:active {
+      box-shadow: 0 1px 0 var(--btn-blue-shadow);
+    }
+
+    /* Botões Menores Científicos */
+    .btn-sci {
+      background: #2a2c2f;
+      color: #79c5e8;
+      height: 38px;
+      font-size: 12px;
+      border-radius: 6px;
+      box-shadow: 0 3px 0 #131416;
+    }
+    .btn-sci:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #131416;
+    }
+
+    .btn-sci.mem {
+      color: #ffb86c;
+    }
+
+    .key-zero {
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="retro-calc-wrapper">
+    <!-- Topo: Marca e Célula Solar -->
+    <div class="top-badge-strip">
+      <div class="brand-name">
+        <div class="brand-led"></div>
+        RETRO-CALC &bull; 80s
+      </div>
+      <div class="solar-cell" title="Painel Solar Estético">
+        <div class="solar-grid-pane"></div>
+        <div class="solar-grid-pane"></div>
+        <div class="solar-grid-pane"></div>
+        <div class="solar-grid-pane"></div>
+      </div>
+    </div>
+
+    <!-- Visor LCD -->
+    <div class="lcd-screen-bezel">
+      <div class="lcd-screen" id="lcd">
+        <div class="lcd-indicators">
+          <span id="ind-mem">MEM: OFF</span>
+          <span id="ind-angle">DEG</span>
+          <span id="ind-tape">TAPE: LIVE</span>
+        </div>
+        <div class="lcd-history" id="lcd-history">&nbsp;</div>
+        <div class="lcd-main-digits" id="lcd-digits">0</div>
+      </div>
+    </div>
+
+    <!-- Barra de Ferramentas / Expansão -->
+    <div class="control-strip">
+      <button class="tool-btn" id="btn-toggle-expand" onclick="toggleExpand()">
+        <span>📐 EXPANDIR</span>
+      </button>
+      <button class="tool-btn" id="btn-toggle-color" onclick="toggleBacklight()">
+        <span>💡 DISPLAY</span>
+      </button>
+      <button class="tool-btn" id="btn-toggle-sound" onclick="toggleSound()">
+        <span id="sound-label">🔊 SOM: ON</span>
+      </button>
+      <button class="tool-btn" id="btn-toggle-tape" onclick="toggleTape()">
+        <span>📜 FITA</span>
+      </button>
+    </div>
+
+    <!-- Fita de Auditoria em Papel (Histórico) -->
+    <div class="paper-tape-container" id="tape-container">
+      <div class="paper-tape" id="paper-tape">
+        <div style="text-align:center; font-weight:bold; margin-bottom: 4px;">*** REGISTRO DE CÁLCULO ***</div>
+      </div>
+    </div>
+
+    <!-- Painel Expansível de Funções Científicas -->
+    <div class="expandable-scientific-panel" id="sci-panel">
+      <button class="btn btn-sci mem" onclick="handleMem('MC')">MC</button>
+      <button class="btn btn-sci mem" onclick="handleMem('MR')">MR</button>
+      <button class="btn btn-sci mem" onclick="handleMem('M+')">M+</button>
+      <button class="btn btn-sci mem" onclick="handleMem('M-')">M-</button>
+      <button class="btn btn-sci" onclick="toggleDegRad()" id="btn-degrad">RAD</button>
+
+      <button class="btn btn-sci" onclick="handleSci('sin')">sin</button>
+      <button class="btn btn-sci" onclick="handleSci('cos')">cos</button>
+      <button class="btn btn-sci" onclick="handleSci('tan')">tan</button>
+      <button class="btn btn-sci" onclick="handleSci('sqrt')">√x</button>
+      <button class="btn btn-sci" onclick="handleSci('pow2')">x²</button>
+
+      <button class="btn btn-sci" onclick="handleSci('ln')">ln</button>
+      <button class="btn btn-sci" onclick="handleSci('log')">log</button>
+      <button class="btn btn-sci" onclick="handleSci('pi')">π</button>
+      <button class="btn btn-sci" onclick="handleSci('e')">e</button>
+      <button class="btn btn-sci" onclick="handleSci('fact')">n!</button>
+    </div>
+
+    <!-- Teclado Numérico Principal -->
+    <div class="calc-keypad">
+      <button class="btn btn-orange" onclick="clearAll()">AC</button>
+      <button class="btn btn-dark" onclick="deleteDigit()">DEL</button>
+      <button class="btn btn-dark" onclick="inputOp('%')">%</button>
+      <button class="btn btn-blue" onclick="inputOp('/')">÷</button>
+
+      <button class="btn btn-num" onclick="inputNum('7')">7</button>
+      <button class="btn btn-num" onclick="inputNum('8')">8</button>
+      <button class="btn btn-num" onclick="inputNum('9')">9</button>
+      <button class="btn btn-blue" onclick="inputOp('*')">×</button>
+
+      <button class="btn btn-num" onclick="inputNum('4')">4</button>
+      <button class="btn btn-num" onclick="inputNum('5')">5</button>
+      <button class="btn btn-num" onclick="inputNum('6')">6</button>
+      <button class="btn btn-blue" onclick="inputOp('-')">-</button>
+
+      <button class="btn btn-num" onclick="inputNum('1')">1</button>
+      <button class="btn btn-num" onclick="inputNum('2')">2</button>
+      <button class="btn btn-num" onclick="inputNum('3')">3</button>
+      <button class="btn btn-blue" onclick="inputOp('+')">+</button>
+
+      <button class="btn btn-num key-zero" onclick="inputNum('0')">0</button>
+      <button class="btn btn-num" onclick="inputDot()">.</button>
+      <button class="btn btn-orange" onclick="calculateResult()">=</button>
+    </div>
+  </div>
+
+  <script>
+    // Estado da Calculadora
+    let currentInput = "0";
+    let previousInput = "";
+    let operation = null;
+    let shouldResetInput = false;
+    let memoryValue = 0;
+    let isDeg = true;
+    let soundEnabled = true;
+
+    // Elementos DOM
+    const digitsDisplay = document.getElementById('lcd-digits');
+    const historyDisplay = document.getElementById('lcd-history');
+    const memIndicator = document.getElementById('ind-mem');
+    const angleIndicator = document.getElementById('ind-angle');
+    const sciPanel = document.getElementById('sci-panel');
+    const tapeContainer = document.getElementById('tape-container');
+    const paperTape = document.getElementById('paper-tape');
+    const lcdScreen = document.getElementById('lcd');
+
+    // Sintetizador de Som com Web Audio API (Dispensa arquivos de áudio externos)
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playBeep(freq = 900, type = 'sine', duration = 0.035) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        // Ignora navegadores com política restritiva antes da interação
+      }
+    }
+
+    // Resposta Tátil para Android
+    function triggerHaptic() {
+      if (navigator.vibrate) {
+        navigator.vibrate(12);
+      }
+    }
+
+    function keyFeedback(freq = 900) {
+      playBeep(freq);
+      triggerHaptic();
+    }
+
+    // Atualização do LCD
+    function updateDisplay() {
+      digitsDisplay.textContent = currentInput;
+      if (operation) {
+        historyDisplay.textContent = `${previousInput} ${getOpSymbol(operation)}`;
+      } else {
+        historyDisplay.textContent = "";
+      }
+    }
+
+    function getOpSymbol(op) {
+      if (op === '*') return '×';
+      if (op === '/') return '÷';
+      return op;
+    }
+
+    // Entrada Numérica
+    function inputNum(num) {
+      keyFeedback(850);
+      if (currentInput === "0" || shouldResetInput) {
+        currentInput = num;
+        shouldResetInput = false;
+      } else {
+        if (currentInput.length < 14) {
+          currentInput += num;
+        }
+      }
+      updateDisplay();
+    }
+
+    function inputDot() {
+      keyFeedback(850);
+      if (shouldResetInput) {
+        currentInput = "0.";
+        shouldResetInput = false;
+      } else if (!currentInput.includes('.')) {
+        currentInput += '.';
+      }
+      updateDisplay();
+    }
+
+    // Operações Aritméticas
+    function inputOp(op) {
+      keyFeedback(1050);
+      if (operation !== null && !shouldResetInput) {
+        calculateResult(false);
+      }
+      previousInput = currentInput;
+      operation = op;
+      shouldResetInput = true;
+      updateDisplay();
+    }
+
+    // Calcular Resultado
+    function calculateResult(isFinal = true) {
+      if (operation === null || shouldResetInput && isFinal) return;
+
+      const prev = parseFloat(previousInput);
+      const curr = parseFloat(currentInput);
+      let result = 0;
+
+      switch (operation) {
+        case '+': result = prev + curr; break;
+        case '-': result = prev - curr; break;
+        case '*': result = prev * curr; break;
+        case '/': 
+          result = curr === 0 ? "Erro" : prev / curr; 
+          break;
+        case '%': result = (prev * curr) / 100; break;
+        default: return;
+      }
+
+      keyFeedback(1200);
+
+      // Adiciona na Fita de Papel Retrô
+      if (result !== "Erro") {
+        addTapeEntry(`${prev} ${getOpSymbol(operation)} ${curr}`, formatPrecision(result));
+      }
+
+      if (result === "Erro") {
+        currentInput = "Erro";
+      } else {
+        currentInput = formatPrecision(result).toString();
+      }
+
+      if (isFinal) {
+        operation = null;
+        previousInput = "";
+      }
+      shouldResetInput = true;
+      updateDisplay();
+    }
+
+    function formatPrecision(num) {
+      return parseFloat(Number(num).toFixed(8));
+    }
+
+    // Deletar e Limpar
+    function deleteDigit() {
+      keyFeedback(700);
+      if (currentInput === "Erro" || shouldResetInput) {
+        currentInput = "0";
+        shouldResetInput = false;
+      } else {
+        currentInput = currentInput.slice(0, -1);
+        if (currentInput === "" || currentInput === "-") currentInput = "0";
+      }
+      updateDisplay();
+    }
+
+    function clearAll() {
+      keyFeedback(600);
+      currentInput = "0";
+      previousInput = "";
+      operation = null;
+      shouldResetInput = false;
+      updateDisplay();
+    }
+
+    // Funções Científicas
+    function handleSci(fn) {
+      keyFeedback(1150);
+      let val = parseFloat(currentInput);
+      let res = 0;
+
+      switch (fn) {
+        case 'sin':
+          res = isDeg ? Math.sin(val * Math.PI / 180) : Math.sin(val);
+          break;
+        case 'cos':
+          res = isDeg ? Math.cos(val * Math.PI / 180) : Math.cos(val);
+          break;
+        case 'tan':
+          res = isDeg ? Math.tan(val * Math.PI / 180) : Math.tan(val);
+          break;
+        case 'sqrt':
+          res = val < 0 ? "Erro" : Math.sqrt(val);
+          break;
+        case 'pow2':
+          res = Math.pow(val, 2);
+          break;
+        case 'ln':
+          res = val <= 0 ? "Erro" : Math.log(val);
+          break;
+        case 'log':
+          res = val <= 0 ? "Erro" : Math.log10(val);
+          break;
+        case 'pi':
+          res = Math.PI;
+          break;
+        case 'e':
+          res = Math.E;
+          break;
+        case 'fact':
+          res = factorial(Math.floor(val));
+          break;
+      }
+
+      if (res !== "Erro") {
+        addTapeEntry(`${fn}(${val})`, formatPrecision(res));
+        currentInput = formatPrecision(res).toString();
+      } else {
+        currentInput = "Erro";
+      }
+
+      shouldResetInput = true;
+      updateDisplay();
+    }
+
+    function factorial(n) {
+      if (n < 0 || n > 100) return "Erro";
+      if (n === 0 || n === 1) return 1;
+      let fact = 1;
+      for (let i = 2; i <= n; i++) fact *= i;
+      return fact;
+    }
+
+    // Memória Retrô
+    function handleMem(type) {
+      keyFeedback(1000);
+      const current = parseFloat(currentInput) || 0;
+      switch (type) {
+        case 'MC':
+          memoryValue = 0;
+          break;
+        case 'MR':
+          currentInput = memoryValue.toString();
+          shouldResetInput = true;
+          break;
+        case 'M+':
+          memoryValue += current;
+          shouldResetInput = true;
+          break;
+        case 'M-':
+          memoryValue -= current;
+          shouldResetInput = true;
+          break;
+      }
+      memIndicator.textContent = memoryValue !== 0 ? `MEM: ${formatPrecision(memoryValue)}` : "MEM: OFF";
+      updateDisplay();
+    }
+
+    // Registro na Fita de Papel
+    function addTapeEntry(expr, result) {
+      const row = document.createElement('div');
+      row.className = 'paper-tape-row';
+      row.innerHTML = `<span>${expr}</span><span>= ${result}</span>`;
+      paperTape.appendChild(row);
+      paperTape.scrollTop = paperTape.scrollHeight;
+    }
+
+    // Controles de Interface
+    function toggleExpand() {
+      keyFeedback(800);
+      sciPanel.classList.toggle('expanded');
+      const btn = document.getElementById('btn-toggle-expand');
+      btn.classList.toggle('active');
+    }
+
+    function toggleTape() {
+      keyFeedback(800);
+      tapeContainer.classList.toggle('open');
+      const btn = document.getElementById('btn-toggle-tape');
+      btn.classList.toggle('active');
+    }
+
+    function toggleBacklight() {
+      keyFeedback(800);
+      lcdScreen.classList.toggle('amber-mode');
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-label').textContent = soundEnabled ? "🔊 SOM: ON" : "🔇 SOM: OFF";
+      if (soundEnabled) keyFeedback(1000);
+    }
+
+    function toggleDegRad() {
+      keyFeedback(950);
+      isDeg = !isDeg;
+      angleIndicator.textContent = isDeg ? "DEG" : "RAD";
+      document.getElementById('btn-degrad').textContent = isDeg ? "RAD" : "DEG";
+    }
+
+    // Suporte ao Teclado Físico
+    window.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') inputNum(e.key);
+      else if (e.key === '.') inputDot();
+      else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') inputOp(e.key);
+      else if (e.key === 'Enter' || e.key === '=') calculateResult();
+      else if (e.key === 'Backspace') deleteDigit();
+      else if (e.key === 'Escape') clearAll();
+    });
+  </script>
+</body>
+</html>
